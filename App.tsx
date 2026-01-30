@@ -7,11 +7,12 @@ import KPIBoard from './components/KPIBoard';
 import DeepDiveCharts from './components/DeepDiveCharts';
 import AlertsTable from './components/AlertsTable';
 import LeadershipDashboard from './components/LeadershipDashboard';
+import DeepInsights from './components/DeepInsights';
 import Loader from './components/Loader';
 import ErrorDisplay from './components/ErrorDisplay';
 import { DATA_URL } from './constants';
 
-type Tab = 'leadership' | 'overview' | 'deepdive' | 'alerts';
+type Tab = 'leadership' | 'overview' | 'deep_insights' | 'deepdive' | 'alerts';
 
 const App: React.FC = () => {
   const { data: rawData, loading, error, refreshData } = useDashboardData(DATA_URL);
@@ -25,12 +26,8 @@ const App: React.FC = () => {
   const filterOptions = useMemo(() => {
     if (!rawData) return { dates: [], segments: [], topics: [] };
     const dates = ['all', ...Array.from(new Set(rawData.map(d => d.report_date)))].sort().reverse();
-    if (dates[1] === 'all') { // handle 'all' being at the end after sort
-        dates.splice(1,1);
-        dates.unshift('all');
-    }
-    const segments = ['all', ...Array.from(new Set(rawData.map(d => d.current_segment)))];
-    const topics = ['all', ...Array.from(new Set(rawData.map(d => d.top_interest_topic)))];
+    const segments = ['all', ...Array.from(new Set(rawData.map(d => d.current_segment)))].sort();
+    const topics = ['all', ...Array.from(new Set(rawData.map(d => d.top_interest_topic)))].sort();
     return { dates, segments, topics };
   }, [rawData]);
 
@@ -54,6 +51,8 @@ const App: React.FC = () => {
         return <LeadershipDashboard data={filteredData} />;
       case 'overview':
         return <KPIBoard data={filteredData} />;
+      case 'deep_insights':
+        return <DeepInsights data={filteredData} />;
       case 'deepdive':
         return <DeepDiveCharts data={filteredData} />;
       case 'alerts':
@@ -63,47 +62,52 @@ const App: React.FC = () => {
     }
   };
 
-  const TabButton = ({ tabId, label }: { tabId: Tab; label: string }) => (
+  const TabButton = ({ tabId, label, icon }: { tabId: Tab; label: string; icon: string }) => (
     <button
       onClick={() => setActiveTab(tabId)}
-      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+      className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${
         activeTab === tabId
-          ? 'bg-blue-600 text-white'
-          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+          ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+          : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-white'
       }`}
     >
+      <span>{icon}</span>
       {label}
     </button>
   );
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-950">
       <Sidebar filters={filters} setFilters={setFilters} options={filterOptions} />
       <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-0">
-            📊 VnExpress Personalization Monitor
-          </h1>
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-gray-800 pb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+              📊 VnExpress Intelligence <span className="text-blue-500">Monitor</span>
+            </h1>
+            <p className="text-gray-500 text-sm mt-1 font-medium">Measurement & Reporting Dashboard L3-L5</p>
+          </div>
           <button
             onClick={refreshData}
             disabled={loading}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors flex items-center"
+            className="mt-4 sm:mt-0 px-5 py-2.5 bg-indigo-600/10 text-indigo-400 border border-indigo-500/30 rounded-lg hover:bg-indigo-600/20 disabled:opacity-50 transition-all flex items-center font-semibold"
           >
             {loading ? <Loader small /> : <RefreshCwIcon className="w-4 h-4 mr-2" />}
-            Refresh Data
+            Làm mới dữ liệu
           </button>
         </header>
 
-        <div className="mb-6">
-          <div className="flex space-x-2 border-b border-gray-700 pb-2 flex-wrap gap-2">
-            <TabButton tabId="leadership" label="Lãnh đạo (Leadership)" />
-            <TabButton tabId="overview" label="Vận hành (Operations)" />
-            <TabButton tabId="deepdive" label="Phân tích Sâu (Deep Dive)" />
-            <TabButton tabId="alerts" label="Cảnh báo Rủi ro (Alerts)" />
+        <div className="mb-8 overflow-x-auto">
+          <div className="flex space-x-2 pb-2 min-w-max">
+            <TabButton tabId="leadership" label="Lãnh đạo" icon="💎" />
+            <TabButton tabId="overview" label="Vận hành" icon="⚙️" />
+            <TabButton tabId="deep_insights" label="Tracking Chuyên sâu" icon="🎯" />
+            <TabButton tabId="deepdive" label="Cơ cấu User" icon="👥" />
+            <TabButton tabId="alerts" label="Cảnh báo Rủi ro" icon="⚠️" />
           </div>
         </div>
         
-        <div className="w-full">
+        <div className="w-full animate-in fade-in duration-500">
             {renderContent()}
         </div>
       </main>
@@ -114,6 +118,5 @@ const App: React.FC = () => {
 const RefreshCwIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
 );
-
 
 export default App;

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import type { UserBehavior } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -55,7 +54,8 @@ const DeepDiveCharts: React.FC<DeepDiveChartsProps> = ({ data }) => {
     }, {} as Record<string, number>);
     return Object.entries(counts)
       .map(([name, users]) => ({ name, users }))
-      .sort((a, b) => b.users - a.users)
+      // Explicitly typing parameters as any to bypass arithmetic type check errors on line 58
+      .sort((a: any, b: any) => b.users - a.users)
       .slice(0, 5);
   }, [data]);
 
