@@ -1,0 +1,5 @@
+{
+  "name": "VnExpress User Behavior Dashboard",
+  "description": "A real-time interactive dashboard to monitor and analyze user behavior data from a published Google Sheet for VnExpress, focusing on user segments, engagement metrics, and churn risk.",
+  "requestFramePermissions": []
+}
