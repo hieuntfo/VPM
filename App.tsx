@@ -6,15 +6,16 @@ import Sidebar from './components/Sidebar';
 import KPIBoard from './components/KPIBoard';
 import DeepDiveCharts from './components/DeepDiveCharts';
 import AlertsTable from './components/AlertsTable';
+import LeadershipDashboard from './components/LeadershipDashboard';
 import Loader from './components/Loader';
 import ErrorDisplay from './components/ErrorDisplay';
 import { DATA_URL } from './constants';
 
-type Tab = 'overview' | 'deepdive' | 'alerts';
+type Tab = 'leadership' | 'overview' | 'deepdive' | 'alerts';
 
 const App: React.FC = () => {
   const { data: rawData, loading, error, refreshData } = useDashboardData(DATA_URL);
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTab, setActiveTab] = useState<Tab>('leadership');
   const [filters, setFilters] = useState<FilterState>({
     report_date: 'all',
     current_segment: 'all',
@@ -23,7 +24,11 @@ const App: React.FC = () => {
 
   const filterOptions = useMemo(() => {
     if (!rawData) return { dates: [], segments: [], topics: [] };
-    const dates = ['all', ...Array.from(new Set(rawData.map(d => d.report_date)))];
+    const dates = ['all', ...Array.from(new Set(rawData.map(d => d.report_date)))].sort().reverse();
+    if (dates[1] === 'all') { // handle 'all' being at the end after sort
+        dates.splice(1,1);
+        dates.unshift('all');
+    }
     const segments = ['all', ...Array.from(new Set(rawData.map(d => d.current_segment)))];
     const topics = ['all', ...Array.from(new Set(rawData.map(d => d.top_interest_topic)))];
     return { dates, segments, topics };
@@ -45,6 +50,8 @@ const App: React.FC = () => {
     if (!rawData) return null;
 
     switch (activeTab) {
+      case 'leadership':
+        return <LeadershipDashboard data={filteredData} />;
       case 'overview':
         return <KPIBoard data={filteredData} />;
       case 'deepdive':
@@ -88,9 +95,10 @@ const App: React.FC = () => {
         </header>
 
         <div className="mb-6">
-          <div className="flex space-x-2 border-b border-gray-700 pb-2">
-            <TabButton tabId="overview" label="Tổng quan (Overview)" />
-            <TabButton tabId="deepdive" label="Phân tích Hành vi (Deep Dive)" />
+          <div className="flex space-x-2 border-b border-gray-700 pb-2 flex-wrap gap-2">
+            <TabButton tabId="leadership" label="Lãnh đạo (Leadership)" />
+            <TabButton tabId="overview" label="Vận hành (Operations)" />
+            <TabButton tabId="deepdive" label="Phân tích Sâu (Deep Dive)" />
             <TabButton tabId="alerts" label="Cảnh báo Rủi ro (Alerts)" />
           </div>
         </div>
